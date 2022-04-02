@@ -23,19 +23,20 @@ webcam = Webcam(args.width, args.height, args.fps, device=args.webcam)
 bgblur = BackgroundBlur()
 vcam = VirtualCam(video_device=args.virtualdevice)
 
-if args.bgimage is not None:
-    path_bg_image = Path(args.bgimage)
-    if path_bg_image.exists():
-        bgblur.bg_image = cv2.imread(str(path_bg_image))
-    else:
-        print(f"Set bgimage, but file does not exist: {path_bg_image}")
-
 # get camera image & set vcam to image shape
 image = webcam.read()
 assert image is not None, "Cant read webcam"
 vcam.width = image.shape[1]
 vcam.height = image.shape[0]
 vcam.init_ffmpeg()
+
+if args.bgimage is not None:
+    path_bg_image = Path(args.bgimage)
+    if path_bg_image.exists():
+        bgblur.bg_image = cv2.imread(str(path_bg_image))
+        bgblur.set_bg_image_size(vcam.width, vcam.height)
+    else:
+        print(f"Set bgimage, but file does not exist: {path_bg_image}")
 
 
 def sigint_handler(signal, frame):

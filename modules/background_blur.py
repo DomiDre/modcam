@@ -1,6 +1,7 @@
 """Module to blur background within an image using mediapipe"""
 import logging
 from typing import Optional
+import math
 
 import mediapipe
 import numpy as np
@@ -16,6 +17,17 @@ class BackgroundBlur:
 
         self.selfie_segmentation = mediapipe.solutions.selfie_segmentation
         self.bg_image = bg_image
+
+    def set_bg_image_size(self, width: int, height: int):
+        if self.bg_image is None:
+            print("Tried to resize bg_image without having set a bg image")
+            return
+        bg_w, bg_h = self.bg_image.shape[1], self.bg_image.shape[0]
+        sf = max(width / bg_w, height / bg_h)
+
+        self.bg_image = cv2.resize(
+            self.bg_image, dsize=(math.ceil(bg_w * sf), math.ceil(bg_h * sf)),
+            interpolation=cv2.INTER_AREA)[:height, :width, :]
 
     def background_blur(self, frame: np.ndarray) -> np.ndarray:
         """Detect person in image, blur background, and return modified image.
@@ -54,5 +66,7 @@ class BackgroundBlur:
             #      bg_image = cv2.GaussianBlur(image,(55,55),0)
             if self.bg_image is None:
                 bg_image = cv2.GaussianBlur(image, (55, 55), 0)
+            else:
+                bg_image = self.bg_image
             output_image = np.where(condition, image, bg_image)
         return output_image
